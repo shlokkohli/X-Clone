@@ -4,6 +4,21 @@ import { ApiResponse } from '../utils/ApiResponse.js'
 import { User } from '../models/user.model.js'
 import bcrypt from 'bcrypt'
 
+const generateAccessAndRefreshTokens = async (userId) => {
+    try {
+        const user = await User.findById(userId);
+        const accessToken = user.generateAccessToken();
+        const refreshToken = user.generateRefreshToken();
+
+        user.refreshToken = refreshToken;
+        user.save( {validateBeforeSave: false} )
+
+        return { accessToken, refreshToken };
+    } catch (error) {
+        throw new ApiError(500, "Something went wrong while generating access and refresh token");
+    }
+}
+
 const signupUser = asyncHandler (async (req, res) => {
 
     // these are the field that will be required when the user registers
@@ -87,4 +102,54 @@ const signupUser = asyncHandler (async (req, res) => {
 
 })
 
-export { signupUser }
+const loginUser = asyncHandler (async (req, res) => {
+
+    // we will login the user based on email and password
+    const {username, password} = req.body;
+
+    // find the user in the db
+    const user = await User.findOne({username});
+
+    if(!user){
+        throw new ApiError(400, "No user exists with this email");
+    }
+
+    const isPasswordCorrect = await bcrypt.compare(password, user.password);
+
+    if(!isPasswordCorrect){
+        throw new ApiError(400, "Incorrect Password");
+    }
+
+    // till now if we have found the user in the db, generate access and refresh token for that user
+    const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user._id);
+
+    const options = {
+        httpOnly: true,
+        secure: true
+    }
+
+    return res
+    .status(200)
+    .cookie("accessToken", accessToken, options)
+    .cookie("refreshToken", refreshToken, options)
+    .json(
+        new ApiResponse(200,
+            {
+                user: {
+                    _id: user._id,
+                    username: user.username,
+                    fullname: user.fullname,
+                    email: user.email,
+                    followers: user.followers,
+                    following: user.following,
+                    profileImg: user.profileImg,
+                    coverImg: user.coverImg,
+                }
+            }
+        )
+    )
+    
+
+})
+
+export { signupUser, loginUser }
