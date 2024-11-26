@@ -107,6 +107,10 @@ const loginUser = asyncHandler (async (req, res) => {
     // we will login the user based on email and password
     const {username, password} = req.body;
 
+    if (!username || !password) {
+        throw new ApiError(400, "Username and password are required");
+    }
+
     // find the user in the db
     const user = await User.findOne({username});
 
@@ -148,8 +152,45 @@ const loginUser = asyncHandler (async (req, res) => {
             }
         )
     )
-    
 
 })
 
-export { signupUser, loginUser }
+const logoutUser = asyncHandler (async (req, res) => {
+
+    await User.findByIdAndUpdate(
+        req.user._id,
+        {
+            $set: {
+                refreshToken: undefined
+            }
+        },
+        {
+            new: true
+        }
+    )
+
+    const options = {
+        httpOnly: true,
+        secure: true
+    };
+
+    return res
+    .status(200)
+    .clearCookie("accessToken", options)
+    .clearCookie("refreshToken", options)
+    .json(new ApiResponse (200, {}, "User logged out successfully") )
+
+})
+
+const getMe = asyncHandler (async (req, res) => {
+
+    const user = await User.findById(req.user._id).select("-password -refreshToken");
+
+    return res
+    .status(200)
+    .json(new ApiResponse(200, user, "User profile retrieved successfully") )
+
+})
+
+
+export { signupUser, loginUser, logoutUser, getMe }
