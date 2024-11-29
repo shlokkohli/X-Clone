@@ -115,7 +115,7 @@ const loginUser = asyncHandler (async (req, res) => {
     const user = await User.findOne({username});
 
     if(!user){
-        throw new ApiError(400, "No user exists with this email");
+        throw new ApiError(400, "No user exists with this username");
     }
 
     const isPasswordCorrect = await bcrypt.compare(password, user.password);
