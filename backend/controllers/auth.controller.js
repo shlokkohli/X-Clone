@@ -193,4 +193,4 @@ const getMe = asyncHandler (async (req, res) => {
 })
 
 
-export { signupUser, loginUser, logoutUser, getMe }
+export { signupUser, loginUser, logoutUser, getMe };
