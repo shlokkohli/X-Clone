@@ -10,6 +10,7 @@ const app = express();
 app.use(express.json())
 app.use(cookieParser())
 app.use(express.urlencoded( {extended: true} ))
+app.use(cors({origin: "http://localhost:5173", credentials: true})); // this allows our backend to give data to our frontend
 
 // Routes declaration
 app.use("/api/auth", authRoutes);
