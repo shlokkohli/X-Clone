@@ -9,6 +9,7 @@ import { Link } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from 'react-hot-toast'
 import LoadingSpinner from './LoadingSpinner';
+import {formatPostDate} from '../../utils/date/index.js';
 
 const Post = ({ post }) => {
 	const [comment, setComment] = useState("");
@@ -43,8 +44,6 @@ const Post = ({ post }) => {
 		}
 	})
 
-	const isLiked = post.likes.includes(authUser.data._id);
-
 	const {mutate: likePost, isPending:isLiking} = useMutation({
 		mutationFn: async() => {
 			try {
@@ -71,20 +70,50 @@ const Post = ({ post }) => {
 			toast.error(error.message)
 		}
 	});
-	
+
+	const {mutate: commentPost, isPending: isCommenting} = useMutation({
+		mutationFn: async() => {
+			try {
+				const res = await fetch(`/api/posts/comment/${post._id}`, {
+					method: "POST",
+					headers: {
+						"Content-Type": "application/json"
+					},
+					body: JSON.stringify({ text: comment})
+				})
+				const data = await res.json();
+
+				if(!data.success){
+					throw new Error(data.message);
+				}
+
+				return data;
+			} catch (error) {
+				throw new Error(error);
+			}
+		},
+		onSuccess: () => {
+			toast.success("Comment posted successfully")
+			setComment("")
+			queryClient.invalidateQueries({ queryKey: ['posts'] })
+		},
+		onError: (error) => {
+			toast.error(error.message);
+		}
+	})
+
+	const isLiked = post.likes.includes(authUser.data._id);
 
 	const isMyPost = authUser.data._id === post.user._id;
 
-	const formattedDate = "1h";
-
-	const isCommenting = false;
+	const formattedDate = formatPostDate(post.createdAt);
 
 	const handleDeletePost = () => {
 		deletePost();
 	};
 
 	const handlePostComment = (e) => {
-		e.preventDefault();
+		commentPost();
 	};
 
 	const handleLikePost = () => {
