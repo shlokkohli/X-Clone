@@ -41,9 +41,9 @@ const createPost = asyncHandler(async (req,res) => {
 
 const deletePost = asyncHandler(async (req,res) => {
 
-    const postId = req.params.id;
+    const { id } = req.params;
 
-    const post = await Posts.findById(postId);
+    const post = await Posts.findById(id);
 
     if(!post){
         throw new ApiError(404, "Post not found");
@@ -61,7 +61,7 @@ const deletePost = asyncHandler(async (req,res) => {
     }
 
     // now delete the post from mongodb
-    await Posts.findByIdAndDelete(postId);
+    await Posts.findByIdAndDelete(id);
 
     return res
     .status(200)

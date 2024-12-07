@@ -49,12 +49,11 @@ const Posts = ({feedType}) => {
 					<PostSkeleton />
 				</div>
 			)}
-			{(isError || !isRefetching || !data?.success) && (
+			{(isError || !data?.success) && (
 				<p className='text-center my-4'>No posts in this tab. Switch 👻</p>
 			)}
 			{!isLoading && data?.success && (
 				<div>
-					{console.log(data)}
 					{data.data.posts.map((post) => (
 						<Post key={post._id} post={post} />
 					))}
