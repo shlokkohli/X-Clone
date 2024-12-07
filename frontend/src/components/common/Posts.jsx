@@ -54,7 +54,7 @@ const Posts = ({feedType}) => {
 			)}
 			{!isLoading && data?.success && (
 				<div>
-					{data.data.posts.map((post) => (
+					{data?.data?.posts.map((post) => (
 						<Post key={post._id} post={post} />
 					))}
 				</div>

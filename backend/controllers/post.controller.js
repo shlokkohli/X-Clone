@@ -123,10 +123,13 @@ const linkUnlikePost = asyncHandler(async (req,res) => {
 
     // if the user has liked the post, unlike it
     if(likedPost){
+        // Remove the current user's ID from the post's likes array
         post.likes = post.likes.filter((eachVal) => eachVal.toString() !== userId);
 
         // Remove the post from the user's liked posts
         user.likedPosts = user.likedPosts.filter((eachVal) => eachVal.toString() !== postId);
+
+        const updatedLikes = post.likes.filter((eachVal) => eachVal.toString() !== userId.toString());
 
         // save the updated post and user
         await post.save();
@@ -134,7 +137,7 @@ const linkUnlikePost = asyncHandler(async (req,res) => {
 
         return res
         .status(200)
-        .json(new ApiResponse(200, {}, "Post unliked successfully"));
+        .json(new ApiResponse(200, { updatedLikes }, "Post unliked successfully"));
     }
     else {
         // it means that user needs to like that post
@@ -156,7 +159,7 @@ const linkUnlikePost = asyncHandler(async (req,res) => {
 
         return res
         .status(200)
-        .json(new ApiResponse(200, { notification }, "Post liked successfully"));
+        .json(new ApiResponse(200, { updatedLikes: post.likes }, "Post liked successfully"));
     }
 
 })
@@ -218,10 +221,9 @@ const getFollowingPosts = asyncHandler(async (req,res) => {
         throw new ApiError(404, "User not found");
     }
 
-    // get the following of the user
-    const following = user.following
+    const following = user.following;
 
-    const followingPosts = await Posts.find({ user: { $in: following } })
+    const posts = await Posts.find({ user: { $in: following } })
     .sort({ createdAt: -1 })
     .populate({
         path: "user",
@@ -232,15 +234,14 @@ const getFollowingPosts = asyncHandler(async (req,res) => {
         select: "-password refreshToken"
     });
 
-    if(followingPosts.length == 0){
+    if(posts.length == 0){
         throw new ApiError(404, "No posts from following");
     }
 
     return res
     .status(200)
-    .json(new ApiResponse(200, {followingPosts}, "Following posts fetched successfully"));
-
-})
+    .json(new ApiResponse(200, {posts}, "Following posts fetched successfully"));
+});
 
 const getUserPosts = asyncHandler(async (req,res) => {
 
