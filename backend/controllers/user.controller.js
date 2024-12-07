@@ -154,8 +154,8 @@ const updateUserProfile = asyncHandler(async (req, res) => {
             await cloudinary.uploader.destroy(user.profileImg.split('/').pop().split('.')[0]);
         }
             
-        const uploadedRepsonse = await cloudinary.uploader.upload(profileImg)
-        profileImg = uploadedRepsonse.secure_url
+        const uploadedResponse = await cloudinary.uploader.upload(profileImg)
+        profileImg = uploadedResponse.secure_url
     }
 
     if(coverImg){
@@ -164,8 +164,8 @@ const updateUserProfile = asyncHandler(async (req, res) => {
             await cloudinary.uploader.destroy(user.coverImg.split('/').pop().split('.')[0]);
         }
         
-        const uploadedReponse = await cloudinary.uploader.upload(coverImg);
-        coverImg = uploadedRepsonse.secure_url
+        const uploadedResponse = await cloudinary.uploader.upload(coverImg);
+        coverImg = uploadedResponse.secure_url
     }
 
     user.fullname = fullname || user.fullname;
@@ -182,7 +182,7 @@ const updateUserProfile = asyncHandler(async (req, res) => {
 
     return res
     .status(200)
-    .json(new ApiResponse(200, user, "User created successfully"))
+    .json(new ApiResponse(200, user, "Updated user profile successfully"))
 
 })
 

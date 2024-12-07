@@ -4,6 +4,7 @@ import { Link, useParams } from "react-router-dom";
 import Posts from "../../components/common/Posts";
 import ProfileHeaderSkeleton from "../../components/skeletons/ProfileHeaderSkeleton";
 import EditProfileModal from "./EditProfileModal";
+import UseFollow from '../../components/hooks/UseFollow.jsx';
 
 import { POSTS } from "../../utils/db/dummy";
 
@@ -11,12 +12,14 @@ import { FaArrowLeft } from "react-icons/fa6";
 import { IoCalendarOutline } from "react-icons/io5";
 import { FaLink } from "react-icons/fa";
 import { MdEdit } from "react-icons/md";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatMemberSinceDate } from '../../utils/date/index.js';
+import { toast } from 'react-hot-toast';
 
 const ProfilePage = () => {
 
-	const {data:authUser, isPending, refetch, isRefetching} = useQuery({queryKey: ['authUser']})
+	const {follow, isPending} = UseFollow();
+	const {data:authUser, refetch, isRefetching} = useQuery({queryKey: ['authUser']})
 
 	const [coverImg, setCoverImg] = useState(null);
 	const [profileImg, setProfileImg] = useState(null);
@@ -26,6 +29,8 @@ const ProfilePage = () => {
 	const profileImgRef = useRef(null);
 
 	const {username} = useParams();
+
+	const queryClient = useQueryClient();
 
 	const {data: user, isLoading} = useQuery({
 		queryKey: ['userProfile', username],
@@ -44,6 +49,44 @@ const ProfilePage = () => {
 				throw new Error(error);
 			}
 		},
+	});
+
+	// this function is to only update the profile image and the cover image
+	const {mutate: updateProfile, isPending: isUpdatingProfile} = useMutation({
+		mutationFn: async() => {
+			try {
+				const res = await fetch('/api/users/update', {
+					method: "POST",
+					headers: {
+						"Content-Type": "application/json"
+					},
+					body: JSON.stringify({
+						coverImg,
+						profileImg 
+					})
+				})
+				
+				const data = await res.json();
+
+				if (!data.success){
+					throw new Error(success.message);
+				}
+
+				return data;
+			} catch (error) {
+				throw new Error(error);
+			}
+		},
+		onSuccess: () => {
+			toast.success("Profile updated successfully")
+			Promise.all([
+				queryClient.invalidateQueries({ queryKey: ['authUser'] }),
+				queryClient.invalidateQueries({ queryKey: ['userProfile'] })
+			])
+		},
+		onError: (error) => {
+			toast.error(error.message);
+		}
 	});
 
 	const memberSincedate = formatMemberSinceDate(user?.createdAt);
@@ -66,6 +109,7 @@ const ProfilePage = () => {
 		}
 	};
 
+	const amIFollowing = user?.followers.includes(authUser?.data?._id);
 
 
 	return (
@@ -132,21 +176,23 @@ const ProfilePage = () => {
 								</div>
 							</div>
 							<div className='flex justify-end px-4 mt-5'>
-								{isMyProfile && <EditProfileModal />}
+								{isMyProfile && <EditProfileModal authUser={authUser} />}
 								{!isMyProfile && (
 									<button
 										className='btn btn-outline rounded-full btn-sm'
-										onClick={() => alert("Followed successfully")}
+										onClick={() => follow(user?._id)}
 									>
-										Follow
+										{isPending && "Loading..."}
+										{!isPending && amIFollowing && "Unfollow"}
+										{!isPending && !amIFollowing && "Follow"}
 									</button>
 								)}
 								{(coverImg || profileImg) && (
 									<button
-										className='btn btn-primary rounded-full btn-sm text-white px-4 ml-2'
-										onClick={() => alert("Profile updated successfully")}
+										className='btn btn-primary rounded-full btn-sm text-white px-4 ml-2 bg-blue-400'
+										onClick={() => updateProfile()}
 									>
-										Update
+										{isUpdatingProfile ? "Updating" : "Update"}
 									</button>
 								)}
 							</div>
@@ -161,17 +207,14 @@ const ProfilePage = () => {
 								<div className='flex gap-2 flex-wrap'>
 									{user?.link && (
 										<div className='flex gap-1 items-center '>
-											<>
-												<FaLink className='w-3 h-3 text-slate-500' />
-												<a
-													href='https://youtube.com/@asaprogrammer_'
-													target='_blank'
-													rel='noreferrer'
-													className='text-sm text-blue-500 hover:underline'
-												>
-													youtube.com/@asaprogrammer_
-												</a>
-											</>
+											<FaLink className='w-3 h-3 text-slate-500' />
+											<a
+											href={user.link.startsWith('http://') || user.link.startsWith('https://') ? user.link : `https://${user.link}`}
+											target='_blank'
+											rel='noreferrer'
+											className='text-sm text-blue-500 hover:underline'>
+												{user.link}
+											</a>
 										</div>
 									)}
 									<div className='flex gap-2 items-center'>
@@ -212,7 +255,7 @@ const ProfilePage = () => {
 							</div>
 						</>
 					)}
-					{console.log(user?._id)}
+
 					<Posts feedType={feedType} username={username} userId={user?._id} />
 				</div>
 			</div>
