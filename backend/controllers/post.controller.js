@@ -219,7 +219,7 @@ const getLikedPosts = asyncHandler(async (req, res) => {
 
     return res
     .status(200)
-    .json(new ApiResponse(200, {likedPosts}, "Liked posts fetched successfully"))
+    .json(new ApiResponse(200, { posts: likedPosts }, "Liked posts fetched successfully"))
 
 })
 
