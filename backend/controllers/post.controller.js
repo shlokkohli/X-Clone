@@ -150,12 +150,24 @@ const linkUnlikePost = asyncHandler(async (req,res) => {
         await post.save();
 
         // if a post have been liked, send notification also
-        const notification = await Notification.create({
-            receiver: post.user,
-            sender: userId,
-            type: 'like',
-            isRead: false
-        })
+        if (post.user.toString() !== userId.toString()) {  // Only create notification if the liker is not the post owner
+            // Check if a notification already exists for this post like
+            const existingNotification = await Notification.findOne({
+                receiver: post.user,
+                sender: userId,
+                type: 'like'
+            });
+
+            // Only create a new notification if one doesn't already exist
+            if (!existingNotification) {
+                await Notification.create({
+                    receiver: post.user,
+                    sender: userId,
+                    type: 'like',
+                    isRead: false
+                });
+            }
+        }
 
         return res
         .status(200)
