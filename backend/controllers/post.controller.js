@@ -232,6 +232,10 @@ const getFollowingPosts = asyncHandler(async (req,res) => {
         select: "-password refreshToken"
     });
 
+    if(followingPosts.length == 0){
+        throw new ApiError(404, "No posts from following");
+    }
+
     return res
     .status(200)
     .json(new ApiResponse(200, {followingPosts}, "Following posts fetched successfully"));
