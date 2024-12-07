@@ -56,7 +56,7 @@ const deletePost = asyncHandler(async (req,res) => {
 
     // if post have an image, delete the image from cloudinary
     if(post.img){
-        const imgId = post.img.split('/').pop().split('')[0];
+        const imgId = post.img.split('/').pop().split('.')[0];
         await cloudinary.uploader.destroy(imgId);
     }
 
