@@ -4,7 +4,7 @@ import connectDB from './db/index.js'
 import { v2 as cloudinary } from 'cloudinary';
 
 dotenv.config({
-    path: '../.env'
+    path: './.env'
 })
 
 connectDB()
