@@ -28,8 +28,6 @@ const EditProfileModal = ({authUser}) => {
 				
 				const data = await res.json();
 
-				console.log(data)
-
 				if (!data.success){
 					throw new Error(success.message);
 				}

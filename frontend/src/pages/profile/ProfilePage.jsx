@@ -110,7 +110,6 @@ const ProfilePage = () => {
 	};
 
 	const amIFollowing = user?.followers.includes(authUser?.data?._id);
-	console.log(amIFollowing)
 
 
 	return (

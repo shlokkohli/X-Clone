@@ -55,8 +55,6 @@ const Post = ({ post }) => {
 				if(!data.success){
 					throw new Error(data.message || "Something went wrong");
 				}
-
-				console.log(data.data.updatedLikes)
 	
 				return data.data.updatedLikes;
 			} catch (error) {
