@@ -37,8 +37,12 @@ function LoginPage() {
 				throw error;
 			}
 		},
-		onSuccess: () => queryClient.invalidateQueries({queryKey: ['authUser'] })
-	})
+		onSuccess: () => {
+			queryClient.invalidateQueries({queryKey: ['authUser']});
+			queryClient.invalidateQueries({queryKey: ['userProfile']});
+			queryClient.invalidateQueries({queryKey: ['following']});
+		}}
+)
 
 	const handleSubmit = (e) => {
 		e.preventDefault();

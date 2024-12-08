@@ -24,8 +24,11 @@ function useFollow() {
             }
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['suggestedUsers'] })
-            queryClient.invalidateQueries({ queryKey: ['authUser'] })
+			Promise.all([
+				queryClient.invalidateQueries({ queryKey: ["suggestedUsers"] }),
+				queryClient.invalidateQueries({ queryKey: ["authUser"] }),
+				queryClient.invalidateQueries({ queryKey: ["userProfile"] }),
+			]);
         }
     });
 
